@@ -3,7 +3,7 @@
 #include <fstream>
 using namespace std;
 /*
- * class for BST. It have basic operations of
+ * class for BST. It has basic operations of
  * BST like insertion, deletion, sorting and searching
  */
 class BST{
