@@ -1,0 +1,228 @@
+#include <iostream>
+#include <sstream>
+#include <fstream>
+using namespace std;
+/*
+ * class for BST. It have basic operations of
+ * BST like insertion, deletion, sorting and searching
+ */
+class BST{
+public:
+    treeNode *root;
+    int nodes;
+    BST() {
+        root = nullptr;
+        nodes = 0;
+    }
+    bool isEmpty() {
+        return root == nullptr;
+    }
+    void insert(string first,string last) {
+        treeNode *newNode = new treeNode(first,last);
+        treeNode *parent = nullptr;
+
+        // if it is first node
+        if(isEmpty()) {
+            root = newNode;
+            ++nodes;
+            return;
+        }
+        //if BST was already there
+        treeNode *curr = root;
+        // Find the new node's parent
+        while(curr) {
+            parent = curr;
+            //if last name of new node is alphabetical bigger than current node's, go to right else left
+            curr = newNode->last.compare(curr->last)>0 ? curr->right : curr->left;
+        }
+        //if last name of new node is alphabetical bigger than it's parent, go to right else left
+        if(newNode->last.compare(parent->last)<0)
+            parent->left = newNode;
+        else
+            parent->right = newNode;
+
+        ++nodes;
+    }
+
+    void remove(string first,string last) {
+
+        if (isEmpty()) {
+            cout<<"No survivor is there"<<endl;
+            return;
+        }
+
+        treeNode *curr = root;
+        treeNode *parent;
+
+        // find searched node
+        while (curr) {
+            if (curr->last == last && curr->first==first) {
+                break;
+            } else {
+                parent = curr;
+                curr = last.compare(curr->last)>0 ? curr->right : curr->left;
+            }
+        }
+
+        if (curr == nullptr) {
+            cout << "survivor not found! " << endl;
+            return;
+        }
+
+
+        //if node is leaf node
+        if (curr->left == nullptr and curr->right == nullptr) {
+            if (parent->left == curr)
+                parent->left = nullptr;
+            else
+                parent->right = nullptr;
+
+            delete curr;
+            --nodes;
+            return;
+        }
+
+        //if  node is with single child
+        if ((curr->left == nullptr and curr->right != nullptr) or (curr->left != nullptr and curr->right == nullptr)) {
+            if (curr->left == nullptr and curr->right != nullptr) {
+                if (parent->left == curr) {
+                    parent->left = curr->right;
+                } else {
+                    parent->right = curr->right;
+                }
+            } else {
+                if (parent->left == curr) {
+                    parent->left = curr->left;
+                } else {
+                    parent->right = curr->left;
+                }
+            }
+            delete curr;
+            --nodes;
+            return;
+        }
+        //if  node have 2 children then replace node with smallest value in right subtree
+        if (curr->left != nullptr and curr->right != nullptr) {
+            treeNode *curr_right = curr->right;
+            if(curr_right->left == nullptr and curr_right->right == nullptr) {
+                curr->first=curr_right->first;
+                curr->last = curr_right->last;
+                delete curr_right;
+                curr->right = nullptr;
+            } else {
+
+                if((curr->right)->left != nullptr) {
+                    treeNode* lcurr;
+                    treeNode* lcurr_parent;
+                    lcurr_parent = curr->right;
+                    lcurr = (curr->right)->left;
+                    while(lcurr->left != nullptr) {
+                        lcurr_parent = lcurr;
+                        lcurr = lcurr->left;
+                    }
+                    curr->first=lcurr->first;
+                    curr->last = lcurr->last;
+                    delete lcurr;
+                    lcurr_parent->left = nullptr;
+                } else {
+                    treeNode *tmp = curr->right;
+                    curr->first = tmp->first;
+                    curr->last = tmp->last;
+                    curr->right = tmp->right;
+                    delete tmp;
+                }
+            }
+            --nodes;
+        }
+    }
+    treeNode* search(string value) {
+        treeNode *curr = root;
+        while (curr) {
+            if(curr->last == value) {
+                 cout<<curr->first<<" "<<curr->last<<endl;
+                if(curr->right && curr->right->last==value){
+                    curr=curr->right;
+                }
+                else return curr;
+
+            } else if(value.compare(curr->last)<0) {
+                curr = curr->left;
+            } else curr = curr->right;
+        }
+        return nullptr;
+    }
+    /*
+     * sort the tree using inorder printing it.
+     */
+    void sort(treeNode* node) {
+        if(node != nullptr) {
+            if(node->left) sort(node->left);
+            cout << " " << node->first << " "<<node->last<<endl;
+            if(node->right)
+                sort(node->right);
+        }
+    }
+};
+
+int main() {
+    char option;
+    string firstName;
+    string lastName;
+    ifstream file("names.txt");
+    string   line;
+    BST *B=new BST();
+    while(getline(file, line))
+    {
+        stringstream   linestream(line);
+        linestream>>firstName>>lastName;
+
+        B->insert(firstName,lastName);
+    }
+    while(1){
+        cout<<"Select a option"<<endl;
+        cout<<"1. Search a survivor with last name"<<endl;
+        cout<<"2. Register a new survivor "<<endl;
+        cout<<"3. Remove an already registered survivor "<<endl;
+        cout<<"4. Count of survivors registered"<<endl;
+        cout<<"5. print out of all the registered survivors in alphabetical order by family name"<<endl;
+        cout<<"0. exit"<<endl;
+        cin>>option;
+        switch(option)
+        {
+            case '1' :
+                cout<<"Enter survivor's last name"<<endl;
+                cin>>lastName;
+                if(B->search(lastName)==NULL){
+                    cout<<"Sorry no survivor with this name"<<endl;
+                }
+                break;
+            case '2' :
+                cout<<"Enter survivor's first name"<<endl;
+                cin>>firstName;
+                cout<<"Enter survivor's last name"<<endl;
+                cin>>lastName;
+                B->insert(firstName,lastName);
+                cout<<"Survivor added successfully"<<endl;
+                break;
+            case '3' :
+                cout<<"Enter survivor's first name"<<endl;
+                cin>>firstName;
+                cout<<"Enter survivor's last name"<<endl;
+                cin>>lastName;
+                B->remove(firstName,lastName);
+                break;
+            case '4' :
+                cout<<"Total "<<B->nodes<<" survivors are here."<<endl;
+                break;
+            case '5':
+                B->sort(B->root);
+                break;
+            case '0':
+                exit(1);
+
+            default : cout<<"Invalid selection"<<endl;
+        }
+    }
+
+    return 0;
+}
